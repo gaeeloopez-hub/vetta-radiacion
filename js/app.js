@@ -202,37 +202,41 @@ function setRoofType(type) {
 // --- 3. NUEVA LÓGICA CIENTÍFICA (PVGIS API) ---
 // SUSTITUYE ESTA FUNCIÓN EN js/app.js
 async function getSolarDataPVGIS(lat, lng) {
-    if (!lat || !lng) return 1500;
+    if (!lat || !lng || lat === 0) return 1500;
 
-    // Intentaremos la conexión hasta 2 veces antes de rendirnos
-    for (let intento = 1; intento <= 2; intento++) {
+    // Intentaremos hasta 3 veces con tiempos de espera más largos
+    for (let intento = 1; intento <= 3; intento++) {
         try {
-            console.log(`🛰️ Intento ${intento}: Consultando satélite para A Coruña/zona...`);
+            console.log(`🛰️ Intento ${intento} para Lat: ${lat}, Lng: ${lng}...`);
 
             const urlOriginal = `https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=${lat}&lon=${lng}&peakpower=1&loss=14&angle=35&aspect=0&outputformat=json`;
             const urlConPuente = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlOriginal)}`;
             
-            // Le damos 5 segundos de margen (un poco más que antes)
+            // Subimos el tiempo de espera a 8 segundos para el primer "despertar"
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
 
             const response = await fetch(urlConPuente, { signal: controller.signal });
             clearTimeout(timeoutId);
 
-            if (!response.ok) throw new Error("Fallo de red");
+            if (!response.ok) throw new Error("Error de conexión");
 
             const data = await response.json();
-            return data.outputs.totals.fixed.E_y;
+            const production = data.outputs.totals.fixed.E_y;
+
+            console.log("✅ ¡Conseguido! Radiación real:", production);
+            return production;
 
         } catch (error) {
-            console.warn(`⚠️ Intento ${intento} fallido...`);
-            // Si es el último intento, devolvemos el valor de seguridad
-            if (intento === 2) {
-                console.error("❌ Satélite inaccesible tras 2 intentos. Usando 1500.");
+            console.warn(`⚠️ Intento ${intento} fallido. Reintentando...`);
+            
+            // Si es el último intento, devolvemos 1500
+            if (intento === 3) {
+                console.error("❌ Fallo definitivo tras 3 intentos. Usando 1500.");
                 return 1500;
             }
-            // Esperamos medio segundo antes de reintentar
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Esperamos un segundo antes del siguiente intento
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
 }

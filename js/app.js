@@ -202,34 +202,38 @@ function setRoofType(type) {
 // --- 3. NUEVA LÓGICA CIENTÍFICA (PVGIS API) ---
 // SUSTITUYE ESTA FUNCIÓN EN js/app.js
 async function getSolarDataPVGIS(lat, lng) {
-    // 1. Validar que tenemos coordenadas
     if (!lat || !lng) return 1500;
 
-    console.log(`🛰️ Consultando satélite para Lat: ${lat}, Lng: ${lng}`);
+    // Intentaremos la conexión hasta 2 veces antes de rendirnos
+    for (let intento = 1; intento <= 2; intento++) {
+        try {
+            console.log(`🛰️ Intento ${intento}: Consultando satélite para A Coruña/zona...`);
 
-    try {
-        // ACTUALIZAMOS A V5_3 (La versión más moderna y estable)
-        const urlOriginal = `https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=${lat}&lon=${lng}&peakpower=1&loss=14&angle=35&aspect=0&outputformat=json`;
-        
-        const urlConPuente = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlOriginal)}`;
-        
-        const response = await fetch(urlConPuente);
-        
-        if (!response.ok) {
-            // Si el error es 400, es muy probable que estemos fuera de Europa/África
-            if(response.status === 400) console.warn("📍 Ubicación fuera de la cobertura del satélite europeo.");
-            throw new Error("Error en la respuesta del satélite");
+            const urlOriginal = `https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=${lat}&lon=${lng}&peakpower=1&loss=14&angle=35&aspect=0&outputformat=json`;
+            const urlConPuente = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlOriginal)}`;
+            
+            // Le damos 5 segundos de margen (un poco más que antes)
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const response = await fetch(urlConPuente, { signal: controller.signal });
+            clearTimeout(timeoutId);
+
+            if (!response.ok) throw new Error("Fallo de red");
+
+            const data = await response.json();
+            return data.outputs.totals.fixed.E_y;
+
+        } catch (error) {
+            console.warn(`⚠️ Intento ${intento} fallido...`);
+            // Si es el último intento, devolvemos el valor de seguridad
+            if (intento === 2) {
+                console.error("❌ Satélite inaccesible tras 2 intentos. Usando 1500.");
+                return 1500;
+            }
+            // Esperamos medio segundo antes de reintentar
+            await new Promise(resolve => setTimeout(resolve, 500));
         }
-        
-        const data = await response.json();
-        const production = data.outputs.totals.fixed.E_y;
-        
-        console.log("✅ Datos reales recibidos:", production);
-        return production;
-
-    } catch (error) {
-        console.warn("⚠️ Usando valor por defecto (1500). Motivo:", error.message);
-        return 1500; 
     }
 }
 

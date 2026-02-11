@@ -225,129 +225,44 @@ async function getSolarDataPVGIS(lat, lng) {
 
 // --- 4. FUNCIÓN PRINCIPAL DE CÁLCULO (Modificada) ---
 async function calculateAndShowResults() {
-    
-    // 1. Feedback visual: Cambiamos el botón para que el usuario espere
+    // 1. Feedback visual en el botón para que el usuario sepa que está trabajando
     const btn = document.querySelector("button[onclick='calculateAndShowResults()']");
-    const originalText = btn.innerHTML; // Guardamos el texto original
-    btn.innerHTML = `<span class="animate-pulse">🛰️ Analizando radiación solar...</span>`;
-    btn.disabled = true;
-    btn.classList.add('opacity-75', 'cursor-wait');
+    if(btn) btn.innerHTML = `<span class="animate-pulse">🛰️ Consultando Satélite...</span>`;
 
-    userData.salary = parseFloat(document.getElementById('salaryInput').value) || 0;
-    
-    // 2. OBTENER DATOS REALES (Esperamos la respuesta del satélite)
-    const solarRadiation = await getSolarDataPVGIS(userData.lat, userData.lng);
-
-    // --- AÑADE ESTO AQUÍ (INICIO) ---
-    const badge = document.getElementById('solarBadge');
-    const valDisplay = document.getElementById('radiationValue');
-    const qualDisplay = document.getElementById('radiationQuality');
-
-    if(badge && valDisplay) {
-        badge.classList.remove('hidden'); // Hacemos visible la tarjeta
-        valDisplay.innerText = Math.round(solarRadiation); // Ponemos el número
-
-        // Le ponemos nota a la zona
-        if(solarRadiation > 1500) {
-            qualDisplay.innerText = "Excelente 🌟";
-            qualDisplay.className = "ml-2 px-2 py-0.5 rounded text-[10px] uppercase tracking-wide text-white bg-emerald-500";
-        } else if(solarRadiation > 1200) {
-            qualDisplay.innerText = "Muy Buena 👍";
-            qualDisplay.className = "ml-2 px-2 py-0.5 rounded text-[10px] uppercase tracking-wide text-white bg-blue-500";
-        } else {
-            qualDisplay.innerText = "Normal ☁️";
-            qualDisplay.className = "ml-2 px-2 py-0.5 rounded text-[10px] uppercase tracking-wide text-white bg-slate-500";
+    try {
+        // 2. Obtener la radiación real (Asegúrate de haber buscado una dirección en el mapa antes)
+        const solarRadiation = await getSolarDataPVGIS(userData.lat, userData.lng);
+        
+        // 3. CONEXIÓN CON LA INSIGNIA (Aquí es donde arreglamos el "0")
+        const valText = document.getElementById('radValue');
+        const qualText = document.getElementById('radQual');
+        
+        if (valText && qualText) {
+            valText.innerText = Math.floor(solarRadiation); // Cambiamos el 0 por el dato real
+            
+            // Le ponemos la nota de calidad
+            if(solarRadiation >= 1600) {
+                qualText.innerText = "EXCELENTE";
+                qualText.style.color = "#059669"; 
+            } else if(solarRadiation >= 1300) {
+                qualText.innerText = "MUY BUENA";
+                qualText.style.color = "#2563eb";
+            } else {
+                qualText.innerText = "ESTÁNDAR";
+                qualText.style.color = "#64748b";
+            }
         }
-    }
-    // --- (FIN) ---
 
-    // ... sigue tu código normal (let annualConsumption = ...)
-    
-    // 3. CÁLCULOS MATEMÁTICOS CON DATOS REALES
-    let annualConsumption = (userData.bill / 0.20) * 12; // kWh consumidos al año
-    
-    // Aquí usamos el dato real de radiación en vez de inventarlo
-    let neededkWp = annualConsumption / solarRadiation;
-    
-    // Calcular límite físico y lógico
-    let physicalLimit = Math.floor(userData.area / 1.8);
-    let residentialLimit = 30; // Tope máximo
-    
-    maxPanelsPossible = Math.min(physicalLimit, residentialLimit);
-    
-    if(maxPanelsPossible < 8 && userData.area > 15) maxPanelsPossible = 8;
-    if(maxPanelsPossible < 3) maxPanelsPossible = 3;
-    
-    let maxkWp = maxPanelsPossible * 0.450; 
-    
-    // Calcular paneles iniciales recomendados
-    userData.kWp = Math.min(neededkWp, maxkWp);
-    userData.panels = Math.ceil(userData.kWp / 0.450);
-    
-    // Ajustes de límites
-    if(userData.panels < 3) userData.panels = 3;
-    if(userData.panels > maxPanelsPossible) userData.panels = maxPanelsPossible;
-    
-    userData.kWp = userData.panels * 0.450;
+        // 4. Continuar con el resto de cálculos
+        recalculateFinancials();
+        goToStep(3); // Saltar a la pantalla de resultados
 
-    // --- LÓGICA INTELIGENTE DE EXTRAS ---
-    let showToast = false;
-    let toastMessage = "";
-
-    if(userData.habit === 'night') {
-        userData.extras.battery = true;
-        showToast = true;
-        toastMessage = "Batería recomendada por consumo nocturno.";
-    } else {
-        userData.extras.battery = false;
-    }
-
-    if(userData.equipment.includes('ev')) {
-        userData.extras.charger = true;
-        if(!showToast) {
-            showToast = true;
-            toastMessage = "Cargador añadido para tu Vehículo Eléctrico.";
-        } else {
-            toastMessage = "Pack Eco: Batería y Cargador V.E. añadidos.";
-        }
-    } else {
-        userData.extras.charger = false;
-    }
-
-    if(userData.equipment.includes('pool') || userData.equipment.includes('ac')) {
-        if(userData.panels < 6 && maxPanelsPossible >= 6) {
-            userData.panels = 6;
-            userData.kWp = userData.panels * 0.450;
-        }
-    }
-
-    // ACTUALIZAR SLIDER UI
-    const slider = document.getElementById('panelSlider');
-    if(slider) {
-        slider.max = maxPanelsPossible;
-        slider.value = userData.panels;
-        document.getElementById('panelsControlDisplay').innerText = userData.panels + " Paneles";
-    }
-    
-    updateExtrasUI();
-    recalculateFinancials();
-    
-    // RESTAURAR BOTÓN Y MOSTRAR RESULTADOS
-    btn.innerHTML = originalText;
-    btn.disabled = false;
-    btn.classList.remove('opacity-75', 'cursor-wait');
-    
-    goToStep(3);
-
-    if(showToast) {
-        setTimeout(() => {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = toastMessage;
-            toast.classList.remove('translate-x-full');
-            setTimeout(() => {
-                toast.classList.add('translate-x-full');
-            }, 4000);
-        }, 1000);
+    } catch (error) {
+        console.error("Error en el cálculo:", error);
+        // Si falla el satélite, forzamos el paso al paso 3 para que no se quede colgado
+        goToStep(3);
+    } finally {
+        if(btn) btn.innerHTML = `<span>Generar Estudio Completo</span>`;
     }
 }
 

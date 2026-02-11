@@ -202,32 +202,34 @@ function setRoofType(type) {
 // --- 3. NUEVA LÓGICA CIENTÍFICA (PVGIS API) ---
 // SUSTITUYE ESTA FUNCIÓN EN js/app.js
 async function getSolarDataPVGIS(lat, lng) {
-    // Si no hay coordenadas, avisamos
-    if (!lat || !lng || lat === 0) {
-        console.error("❌ Error: No hay coordenadas válidas para buscar.");
-        return 1500;
-    }
+    // 1. Validar que tenemos coordenadas
+    if (!lat || !lng) return 1500;
 
-    console.log(`🛰️ Pidiendo datos para Lat: ${lat}, Lng: ${lng}...`);
+    console.log(`🛰️ Consultando satélite para Lat: ${lat}, Lng: ${lng}`);
 
     try {
-        const urlOriginal = `https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?lat=${lat}&lon=${lng}&peakpower=1&loss=14&angle=35&aspect=0&outputformat=json`;
+        // ACTUALIZAMOS A V5_3 (La versión más moderna y estable)
+        const urlOriginal = `https://re.jrc.ec.europa.eu/api/v5_3/PVcalc?lat=${lat}&lon=${lng}&peakpower=1&loss=14&angle=35&aspect=0&outputformat=json`;
         
-        // Usamos un puente diferente por si el anterior falla
         const urlConPuente = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlOriginal)}`;
         
         const response = await fetch(urlConPuente);
-        if (!response.ok) throw new Error("El satélite no responde");
-
+        
+        if (!response.ok) {
+            // Si el error es 400, es muy probable que estemos fuera de Europa/África
+            if(response.status === 400) console.warn("📍 Ubicación fuera de la cobertura del satélite europeo.");
+            throw new Error("Error en la respuesta del satélite");
+        }
+        
         const data = await response.json();
         const production = data.outputs.totals.fixed.E_y;
-
-        console.log("✅ Datos recibidos correctamente:", production);
+        
+        console.log("✅ Datos reales recibidos:", production);
         return production;
 
     } catch (error) {
-        console.warn("⚠️ Fallo en el satélite. Usando valor 1500 por seguridad. Error:", error.message);
-        return 1500;
+        console.warn("⚠️ Usando valor por defecto (1500). Motivo:", error.message);
+        return 1500; 
     }
 }
 

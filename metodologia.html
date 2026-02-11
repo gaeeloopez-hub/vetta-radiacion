@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VETTA | Metodología Técnica</title>
+    <meta name="description" content="El estándar de ingeniería VETTA. Sin comerciales, solo datos y licitación técnica.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        tech: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            primary: '#10b981', 
+                            hover: '#059669',   
+                            dark: '#0f172a',    
+                            light: '#f8fafc',   
+                        }
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "url('https://grainy-gradients.vercel.app/noise.svg')",
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Sutil patrón de fondo para dar textura */
+        .bg-grid-slate {
+            background-size: 40px 40px;
+            background-image: linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(15, 23, 42, 0.05) 1px, transparent 1px);
+        }
+    </style>
+</head>
+<body class="bg-white text-slate-600 font-sans text-lg antialiased selection:bg-brand-primary selection:text-white">
+
+    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-lg border-b border-slate-100 transition-all supports-[backdrop-filter]:bg-white/80">
+        <div class="max-w-[1400px] mx-auto px-6 lg:px-8">
+            <div class="flex justify-between items-center h-24">
+                <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.html'">
+                    <div class="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-white font-bold font-tech text-xl shadow-lg shadow-emerald-200/50">V</div>
+                    <span class="font-tech text-2xl font-bold text-slate-900 tracking-tight">VETTA</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="inversion.html" class="text-base font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-50 px-4 py-2 rounded-lg transition-all">Inversión vs Gasto</a>
+                    <a href="metodologia.html" class="text-base font-bold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-lg transition-all">Metodología</a>
+                    <div class="relative group h-24 flex items-center">
+                        <button class="flex items-center gap-1 text-base font-medium text-slate-500 group-hover:text-emerald-600 px-4 py-2 rounded-lg hover:bg-emerald-50/50 transition outline-none">
+                            Proyectos Locales
+                            <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                        <div class="absolute top-20 left-1/2 -translate-x-1/2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 p-2">
+                            <div class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Valencia Norte</div>
+                            <a href="solar/la-eliana.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-50 transition group/item">
+                                <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold group-hover/item:bg-emerald-600 group-hover/item:text-white transition">LE</span>
+                                <div><span class="block text-sm font-bold text-slate-900">La Eliana</span><span class="block text-[10px] text-slate-400">Bonificación IBI Activa</span></div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <a href="calculadora.html" class="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-medium text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
+                        <span>Empezar Estudio</span>
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="relative pt-40 pb-24 bg-white overflow-hidden">
+        <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-multiply"></div>
+        <div class="absolute top-0 right-0 w-[600px] h-[600px] bg-slate-50 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/4"></div>
+
+        <div class="max-w-[1400px] mx-auto px-6 lg:px-8 relative z-10">
+            <div class="grid lg:grid-cols-2 gap-16 items-center">
+                
+                <div class="max-w-2xl">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div class="h-px w-12 bg-emerald-500"></div>
+                        <span class="text-emerald-700 font-bold tracking-widest uppercase text-xs">Ingeniería & Gestión</span>
+                    </div>
+                    
+                    <h1 class="text-5xl md:text-7xl font-tech font-bold text-slate-900 leading-[1.1] tracking-tight mb-8">
+                        Eliminamos la <br>
+                        <span class="relative inline-block">
+                            incertidumbre.
+                            <svg class="absolute w-full h-3 -bottom-1 left-0 text-emerald-200 -z-10" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 5 Q 50 10 100 5" stroke="currentColor" stroke-width="8" fill="none" /></svg>
+                        </span>
+                    </h1>
+                    
+                    <p class="text-lg md:text-xl text-slate-500 leading-relaxed font-light mb-10">
+                        Transformamos un proceso de venta agresiva en un 
+                        <span class="text-slate-900 font-medium border-b border-emerald-300">procedimiento técnico estándar.</span> 
+                        Sin comerciales, sin márgenes ocultos y con control total de la obra.
+                    </p>
+
+                    <div class="flex flex-wrap gap-4">
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-900 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            Sin Sorpresas
+                        </div>
+                        <div class="flex items-center gap-2 text-sm font-bold text-slate-900 bg-slate-50 px-4 py-2 rounded-lg border border-slate-200">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                            Precio Cerrado
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative hidden lg:block h-[600px]">
+                    <div class="absolute top-10 right-10 w-full h-full border border-slate-200 rounded-[3rem] -z-10 translate-x-4 -translate-y-4"></div>
+                    
+                    <div class="relative h-full w-full rounded-[2.5rem] overflow-hidden shadow-2xl border-[8px] border-white group">
+                        <img src="https://images.unsplash.com/photo-1497435334941-8c899ee9e8e9?q=80&w=1974&auto=format&fit=crop" alt="Ingeniero revisando planos" class="w-full h-full object-cover object-center transform group-hover:scale-105 transition duration-1000 grayscale-[20%] group-hover:grayscale-0">
+                        
+                        <div class="absolute inset-0 bg-gradient-to-t from-slate-900/40 via-transparent to-transparent"></div>
+                    </div>
+
+                    <div class="absolute bottom-12 -left-12 bg-white p-6 rounded-2xl shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] border border-slate-100 max-w-xs animate-bounce-slow">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Eficiencia</p>
+                                <p class="text-2xl font-tech font-bold text-slate-900">98.4%</p>
+                            </div>
+                            <div class="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
+                            </div>
+                        </div>
+                        <div class="w-full bg-slate-100 rounded-full h-1.5 mb-2">
+                            <div class="bg-emerald-500 h-1.5 rounded-full" style="width: 98%"></div>
+                        </div>
+                        <p class="text-[10px] text-slate-400">Rendimiento estimado vs real</p>
+                    </div>
+
+                    <div class="absolute top-8 -right-6 bg-slate-900 text-white px-6 py-3 rounded-xl shadow-xl flex items-center gap-3 transform rotate-3 hover:rotate-0 transition duration-300">
+                        <svg class="w-5 h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                        <div>
+                            <p class="text-xs font-bold text-slate-400 uppercase">Status</p>
+                            <p class="font-bold text-sm">VETTA Certified</p>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 bg-white">
+        <div class="max-w-[1400px] mx-auto px-6 lg:px-8">
+            
+            <div class="flex items-end justify-between border-b border-slate-100 pb-8 mb-12">
+                <div>
+                    <span class="text-emerald-600 font-bold tracking-widest uppercase text-xs mb-2 block">Workflow Técnico</span>
+                    <h3 class="text-3xl font-tech font-bold text-slate-900">Estándar de ejecución.</h3>
+                </div>
+                <div class="hidden md:block text-right">
+                    <p class="text-sm text-slate-400">Protocolo v2.4</p>
+                    <p class="text-xs text-slate-300">ISO 9001 Compliant</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                <div class="group p-10 rounded-[2.5rem] bg-slate-50 border border-slate-100 hover:border-emerald-200 transition-all duration-300 relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-8">
+                        <span class="font-mono text-emerald-600 text-sm font-bold bg-white px-3 py-1 rounded-full border border-emerald-100">FASE 01</span>
+                        <svg class="w-6 h-6 text-slate-300 group-hover:text-emerald-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" /></svg>
+                    </div>
+                    <h3 class="text-3xl font-tech font-bold text-slate-900 mb-4">Auditoría Satelital</h3>
+                    <p class="text-slate-500 leading-relaxed text-lg">
+                        Analizamos la superficie útil de tu cubierta mediante cartografía satelital. Calculamos la radiación solar incidente y las pérdidas por sombras anuales con un margen de error < 2%.
+                    </p>
+                </div>
+
+                <div class="group p-10 rounded-[2.5rem] bg-slate-50 border border-slate-100 hover:border-emerald-200 transition-all duration-300 relative overflow-hidden">
+                    <div class="flex justify-between items-start mb-8">
+                        <span class="font-mono text-emerald-600 text-sm font-bold bg-white px-3 py-1 rounded-full border border-emerald-100">FASE 02</span>
+                        <svg class="w-6 h-6 text-slate-300 group-hover:text-emerald-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2z" /></svg>
+                    </div>
+                    <h3 class="text-3xl font-tech font-bold text-slate-900 mb-4">Dimensionado</h3>
+                    <p class="text-slate-500 leading-relaxed text-lg">
+                        No vendemos kits estándar. Cruzamos tu consumo horario real (CSV de la distribuidora) con la producción estimada para dimensionar el sistema exacto que maximiza tu retorno financiero (TIR).
+                    </p>
+                </div>
+
+                <div class="group p-10 rounded-[2.5rem] bg-slate-900 border border-slate-800 relative overflow-hidden md:col-span-2 lg:col-span-1 transform lg:scale-105 shadow-2xl z-10">
+                    <div class="absolute top-0 right-0 w-40 h-40 bg-emerald-500 rounded-full blur-[80px] opacity-20"></div>
+                    
+                    <div class="flex justify-between items-start mb-8 relative z-10">
+                        <span class="font-mono text-emerald-900 text-sm font-bold bg-emerald-400 px-3 py-1 rounded-full">FASE 03</span>
+                        <svg class="w-6 h-6 text-emerald-400 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <h3 class="text-3xl font-tech font-bold text-white mb-4 relative z-10">Licitación Ciega</h3>
+                    <p class="text-slate-400 leading-relaxed text-lg relative z-10">
+                        Aquí está el secreto. Redactamos el pliego técnico y lo enviamos a 3 instaladores certificados. Compiten a la baja por tu proyecto. <span class="text-white font-bold">Ahorro medio: 15%.</span>
+                    </p>
+                </div>
+
+                <div class="group p-10 rounded-[2.5rem] bg-slate-50 border border-slate-100 hover:border-emerald-200 transition-all duration-300 relative overflow-hidden md:col-span-2 lg:col-span-1">
+                    <div class="flex justify-between items-start mb-8">
+                        <span class="font-mono text-emerald-600 text-sm font-bold bg-white px-3 py-1 rounded-full border border-emerald-100">FASE 04</span>
+                        <svg class="w-6 h-6 text-slate-300 group-hover:text-emerald-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </div>
+                    <h3 class="text-3xl font-tech font-bold text-slate-900 mb-4">Control & Legal</h3>
+                    <p class="text-slate-500 leading-relaxed text-lg">
+                        Validamos la instalación in-situ o mediante reporte fotográfico. Gestionamos la legalización en Industria y presentamos la solicitud de bonificación del IBI en tu ayuntamiento.
+                    </p>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    <section class="py-32 bg-white">
+        <div class="max-w-[1400px] mx-auto px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-20 items-center">
+                
+                <div>
+                    <h2 class="text-4xl md:text-5xl font-tech font-bold text-slate-900 mb-6">El Filtro VETTA.</h2>
+                    <p class="text-xl text-slate-500 mb-10">
+                        No trabajamos con cualquiera. Rechazamos al 70% de los instaladores que solicitan entrar en nuestra red. Solo la élite toca tu tejado.
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex gap-4 items-start">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-900 font-bold">A</div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Solvencia Técnica</h4>
+                                <p class="text-sm text-slate-500">Carnet de instalador en baja tensión y seguro de RC al día obligatorios.</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 items-start">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-900 font-bold">B</div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Materiales Tier-1</h4>
+                                <p class="text-sm text-slate-500">Solo permitimos paneles y baterías de fabricantes top mundial (Huawei, Longi, Jinko...).</p>
+                            </div>
+                        </div>
+                        <div class="flex gap-4 items-start">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-900 font-bold">C</div>
+                            <div>
+                                <h4 class="font-bold text-slate-900">Historial Auditado</h4>
+                                <p class="text-sm text-slate-500">Revisamos sus últimas 10 instalaciones. Si hay chapuzas, están fuera.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-brand-light rounded-[3rem] p-8 md:p-12 relative">
+                    <div class="absolute top-10 right-10 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl"></div>
+                    
+                    <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 transform rotate-2 hover:rotate-0 transition duration-500 border border-slate-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-bold text-slate-400 uppercase">Componente</span>
+                            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Aprobado</span>
+                        </div>
+                        <p class="font-tech font-bold text-lg text-slate-900">Paneles N-Type TopCon</p>
+                        <p class="text-sm text-slate-500">Degradación anual < 0.4%</p>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-xl p-6 mb-6 transform -rotate-1 hover:rotate-0 transition duration-500 border border-slate-100 z-10 relative">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-bold text-slate-400 uppercase">Instalador</span>
+                            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">Verificado</span>
+                        </div>
+                        <p class="font-tech font-bold text-lg text-slate-900">Certificado Industria 2024</p>
+                        <p class="text-sm text-slate-500">Seguro RC: Vigente</p>
+                    </div>
+
+                    <div class="bg-white rounded-2xl shadow-xl p-6 transform rotate-1 hover:rotate-0 transition duration-500 border border-slate-100">
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="text-xs font-bold text-slate-400 uppercase">Garantía</span>
+                            <span class="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded">25 Años</span>
+                        </div>
+                        <p class="font-tech font-bold text-lg text-slate-900">Producción Garantizada</p>
+                        <p class="text-sm text-slate-500">Cobertura de fabricante oficial.</p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="py-32 bg-slate-50 border-t border-slate-200 text-center">
+        <div class="max-w-3xl mx-auto px-6">
+            <h2 class="text-4xl font-tech font-bold text-slate-900 mb-8">
+                Ingeniería primero. Instalación después.
+            </h2>
+            <p class="text-xl text-slate-500 mb-12">
+                Descubre por qué somos la opción segura para los propietarios exigentes.
+            </p>
+            <a href="calculadora.html" class="inline-flex items-center justify-center px-12 py-6 text-xl font-bold text-white bg-slate-900 rounded-2xl hover:bg-slate-800 transition shadow-2xl hover:shadow-slate-900/20 transform hover:-translate-y-1">
+                Comenzar mi Estudio
+            </a>
+        </div>
+    </section>
+
+    <footer class="bg-white border-t border-slate-200 pt-16 pb-8">
+        <div class="max-w-[1400px] mx-auto px-6 lg:px-8">
+            <div class="text-center text-slate-400 text-sm">
+                &copy; 2024 VETTA Engineering Systems.
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

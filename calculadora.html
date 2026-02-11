@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>VETTA | Studio Satelital Pro</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'], tech: ['Space Grotesk', 'sans-serif'], },
+                    colors: { brand: { primary: '#10b981', hover: '#059669', dark: '#0f172a' } },
+                    screens: { 'md': '850px' } 
+                }
+            }
+        }
+    </script>
+    <style>
+        .gmnoprint, .gm-style-cc { display: none !important; }
+        .slide-up { animation: slideUp 0.5s ease-out forwards; }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .tool-active { background-color: #10b981 !important; color: white !important; border-color: #10b981 !important; }
+        
+        /* Gráfico de Barras Mejorado */
+        /* Padding-bottom aumentado a 35px para que las etiquetas tengan espacio de sobra */
+        .bar-container { display: flex; align-items: flex-end; gap: 40px; height: 180px; padding-bottom: 35px; }
+        .bar { width: 60px; border-radius: 12px 12px 0 0; position: relative; transition: height 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        
+        /* Ajustes Mobile */
+        body { touch-action: none; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 20px; }
+        
+        .grid-dashboard {
+            display: grid;
+            gap: 1rem;
+            grid-template-columns: 1fr;
+        }
+        @media (min-width: 850px) {
+            .grid-dashboard {
+                grid-template-columns: repeat(12, 1fr);
+                grid-auto-rows: minmax(100px, auto);
+            }
+            .area-price { grid-column: span 4; grid-row: span 4; }
+            .area-control { grid-column: span 8; }
+            .area-savings { grid-column: span 8; grid-row: span 2; }
+            .area-extras { grid-column: span 5; }
+            .area-trees { grid-column: span 3; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans overflow-hidden h-[100dvh] flex flex-col">
+
+    <div id="toast" class="fixed top-20 right-4 z-[60] bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl transform translate-x-full transition-transform duration-500 flex items-center gap-3">
+        <div class="text-emerald-400">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+        </div>
+        <div>
+            <p class="font-bold text-sm">Configuración Inteligente</p>
+            <p class="text-xs text-slate-300" id="toastMsg">Batería añadida por consumo nocturno.</p>
+        </div>
+    </div>
+
+    <nav class="bg-white border-b border-slate-200 h-16 flex-none flex items-center justify-between px-4 md:px-6 z-50 relative">
+        <div class="flex items-center gap-2 cursor-pointer" onclick="window.location.reload()">
+            <div class="w-8 h-8 bg-brand-primary rounded-lg flex items-center justify-center text-white font-bold font-tech">V</div>
+            <span class="font-tech font-bold text-slate-900 text-lg">VETTA Studio</span>
+        </div>
+        <div class="flex gap-4 text-xs md:text-sm font-medium">
+            <span id="statusIndicator" class="text-slate-500 flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="statusDot"></span> 
+                <span id="statusText" class="hidden md:inline">Sistema Google Maps Activo</span>
+                <span class="md:hidden">Online</span>
+            </span>
+        </div>
+    </nav>
+
+    <div class="flex-1 relative w-full h-full overflow-hidden">
+        
+        <div id="map" class="absolute inset-0 z-0 w-full h-full bg-slate-200 transition-opacity duration-500"></div>
+
+        <div class="absolute left-4 top-4 md:left-6 md:top-6 flex flex-col gap-2 z-10 transition-opacity duration-300" id="drawingTools">
+            <button onclick="setDrawingMode('polygon')" id="btnDraw" class="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl shadow-lg flex items-center justify-center text-slate-600 hover:text-emerald-600 hover:scale-105 transition border-2 border-transparent" title="Dibujar Tejado">
+                <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+            </button>
+            <button onclick="clearMap()" class="w-10 h-10 md:w-12 md:h-12 bg-white rounded-xl shadow-lg flex items-center justify-center text-slate-600 hover:text-red-500 hover:scale-105 transition" title="Borrar Todo">
+                <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+            </button>
+        </div>
+
+        <div id="sidebar" class="absolute z-40 bg-white/95 backdrop-blur-md shadow-2xl transition-all duration-500 ease-in-out flex flex-col overflow-hidden
+                    /* ESTADO INICIAL (Paso 1): Pegado abajo/derecha */
+                    bottom-0 left-0 w-full h-[45vh] rounded-t-[2rem] border-t border-slate-200
+                    md:top-0 md:right-0 md:h-full md:w-[450px] md:max-h-full md:rounded-none md:border-l md:border-t-0 md:left-auto">
+            
+            <div class="w-full flex justify-center pt-3 pb-1 md:hidden shrink-0">
+                <div class="w-12 h-1.5 bg-slate-300 rounded-full"></div>
+            </div>
+
+            <div class="overflow-y-auto flex-1 p-6 md:p-8 h-full">
+                
+                <div id="step1" class="flex flex-col h-full fade-in">
+                    <div class="mb-4 md:mb-6">
+                        <span class="text-[10px] md:text-xs font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded">Fase 1: Ubicación</span>
+                        <h2 class="text-2xl md:text-3xl font-tech font-bold text-slate-900 mt-2">Busca tu casa</h2>
+                        <p class="text-slate-500 mt-1 md:mt-2 text-xs md:text-sm leading-relaxed">
+                            El buscador inteligente te llevará a la puerta de tu casa. Luego, usa el lápiz de la izquierda para marcar el tejado.
+                        </p>
+                    </div>
+
+                    <div class="relative mb-4 md:mb-8 z-50">
+                        <input type="text" id="googleAddressInput" class="w-full p-3.5 pl-11 bg-slate-50 border border-slate-200 rounded-xl text-base font-medium focus:ring-2 focus:ring-emerald-500 outline-none transition" placeholder="Escribe tu dirección...">
+                        <svg class="w-5 h-5 text-slate-400 absolute left-4 top-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </div>
+                    
+                    <div class="p-4 md:p-6 bg-slate-50 border border-slate-100 rounded-2xl text-center mb-4 md:mb-6 transition-colors" id="areaCard">
+                        <p class="text-[10px] md:text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">Área del Tejado</p>
+                        <p class="text-4xl md:text-5xl font-tech font-bold text-slate-300 mb-1 transition-colors" id="areaText"><span id="areaDisplay">0</span><span class="text-xl md:text-2xl">m²</span></p>
+                        <p class="text-xs md:text-sm text-slate-400 font-medium" id="panelEstimate">Usa el lápiz para dibujar</p>
+                    </div>
+
+                    <div class="mt-auto pt-2">
+                        <button onclick="goToStep(2)" id="btnNext1" class="w-full bg-slate-200 text-slate-400 font-bold py-3 md:py-4 rounded-xl cursor-not-allowed transition-all flex justify-center gap-2 items-center text-sm md:text-base" disabled>
+                            <span>Confirmar Superficie</span>
+                            <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="step2" class="hidden flex-col h-full fade-in">
+    <div class="mb-4 md:mb-6 max-w-2xl mx-auto w-full">
+        <span class="text-[10px] md:text-xs font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded">Fase 2: Auditoría</span>
+        <h2 class="text-2xl md:text-3xl font-tech font-bold text-slate-900 mt-2">Perfil Energético</h2>
+    </div>
+
+    <div class="space-y-6 flex-1 overflow-y-auto max-w-2xl mx-auto w-full pr-2 custom-scrollbar">
+        
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+            <div class="flex justify-between items-end mb-3">
+                <label class="font-bold text-slate-700 text-sm">Factura Mensual Media</label>
+                <span class="text-lg font-tech font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg border border-emerald-100"><span id="billValue">100</span>€</span>
+            </div>
+            <input type="range" min="30" max="400" value="100" class="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-emerald-500" oninput="document.getElementById('billValue').innerText = this.value; userData.bill = parseInt(this.value)">
+        </div>
+
+        <div>
+            <label class="block font-bold text-slate-700 text-sm mb-3">¿Cuándo consumes más?</label>
+            <div class="grid grid-cols-2 gap-3">
+                <label class="cursor-pointer group">
+                    <input type="radio" name="habit" value="day" class="peer sr-only" onclick="userData.habit='day'">
+                    <div class="p-3 border-2 border-slate-200 rounded-xl flex items-center gap-3 hover:border-emerald-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition">
+                        <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-500 flex items-center justify-center text-xl">☀️</div>
+                        <div class="text-sm font-bold text-slate-600 peer-checked:text-emerald-900">De Día</div>
+                    </div>
+                </label>
+                <label class="cursor-pointer group">
+                    <input type="radio" name="habit" value="night" class="peer sr-only" checked onclick="userData.habit='night'">
+                    <div class="p-3 border-2 border-slate-200 rounded-xl flex items-center gap-3 hover:border-emerald-200 peer-checked:border-emerald-500 peer-checked:bg-emerald-50 transition">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-500 flex items-center justify-center text-xl">🌙</div>
+                        <div class="text-sm font-bold text-slate-600 peer-checked:text-emerald-900">De Noche</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <div>
+            <label class="block font-bold text-slate-700 text-sm mb-3">Equipamiento en la vivienda</label>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                <div onclick="toggleEquipment('ev')" id="eq_ev" class="cursor-pointer border-2 border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center gap-2 hover:border-emerald-300 transition text-center h-24">
+                    <svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    <span class="text-[10px] font-bold text-slate-500 leading-tight">Coche<br>Eléctrico</span>
+                </div>
+                <div onclick="toggleEquipment('ac')" id="eq_ac" class="cursor-pointer border-2 border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center gap-2 hover:border-emerald-300 transition text-center h-24">
+                    <svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <span class="text-[10px] font-bold text-slate-500 leading-tight">Aire /<br>Aerotermia</span>
+                </div>
+                <div onclick="toggleEquipment('pool')" id="eq_pool" class="cursor-pointer border-2 border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center gap-2 hover:border-emerald-300 transition text-center h-24">
+                    <svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
+                    <span class="text-[10px] font-bold text-slate-500 leading-tight">Piscina</span>
+                </div>
+                <div onclick="toggleEquipment('other')" id="eq_other" class="cursor-pointer border-2 border-slate-200 rounded-xl p-3 flex flex-col items-center justify-center gap-2 hover:border-emerald-300 transition text-center h-24">
+                    <svg class="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" /></svg>
+                    <span class="text-[10px] font-bold text-slate-500 leading-tight">Otros<br>Motores</span>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <label class="block font-bold text-slate-700 text-sm mb-3">Tipo de Tejado</label>
+            <div class="flex gap-3">
+                <button onclick="setRoofType('sloped')" id="roof_sloped" class="flex-1 py-3 border-2 border-emerald-500 bg-emerald-50 text-emerald-700 font-bold rounded-xl text-xs md:text-sm transition">Inclinado (Teja)</button>
+                <button onclick="setRoofType('flat')" id="roof_flat" class="flex-1 py-3 border-2 border-slate-200 text-slate-500 font-bold rounded-xl text-xs md:text-sm transition hover:border-emerald-200">Plano (Azotea)</button>
+            </div>
+        </div>
+
+        <div class="pt-2 border-t border-slate-100">
+            <div class="flex justify-between items-center mb-2">
+                <label class="font-bold text-slate-700 text-xs">IRPF total anual antes de retenciones (Opcional)
+</label>
+                <span class="text-[10px] text-slate-400">Es el IRPF total que Hacienda calcula que deberías pagar en el año, antes de restar lo que ya te han ido reteniendo en la nómina.</span>
+            </div>
+            <div class="relative">
+                <span class="absolute left-4 top-2.5 text-slate-400 text-sm">€</span>
+                <input type="number" id="salaryInput" class="w-full p-2 pl-8 bg-slate-50 border border-slate-200 rounded-lg font-bold outline-none text-sm focus:ring-2 focus:ring-emerald-500" placeholder="Ej: 4000">
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-auto pt-4 flex gap-3 max-w-2xl mx-auto w-full">
+        <button onclick="goToStep(1)" class="px-4 py-3 md:px-6 md:py-4 text-slate-500 font-bold hover:text-slate-900 transition text-sm md:text-base">Atrás</button>
+        <button onclick="calculateAndShowResults()" class="flex-1 bg-slate-900 text-white font-bold py-3 md:py-4 rounded-xl hover:bg-slate-800 shadow-xl transform hover:-translate-y-1 transition flex justify-center items-center gap-2 text-sm md:text-base">
+            <span>Generar Estudio Completo</span>
+            <svg class="w-4 h-4 md:w-5 md:h-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+        </button>
+    </div>
+</div>
+
+                <div id="step3" class="hidden flex-col h-full fade-in relative overflow-hidden bg-slate-50">
+                    
+                    <div class="px-4 md:px-6 pt-4 md:pt-6 pb-2 shrink-0 z-20 max-w-6xl mx-auto w-full">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-1 rounded">Fase 3: Propuesta</span>
+                                <h2 class="text-2xl font-tech font-bold text-slate-900 mt-1">Presupuesto Estimado</h2>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-xl font-tech font-bold text-slate-900 leading-none" id="headerPower">0 kWp</div>
+                                <div class="text-[10px] text-slate-400 font-bold uppercase">Instalada</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex-1 overflow-y-auto px-4 md:px-6 pb-28 pt-2 z-20 custom-scrollbar">
+                        <div class="max-w-6xl mx-auto grid-dashboard pb-8">
+                            
+                            <div class="area-price bg-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden group flex flex-col justify-between">
+                                <div class="absolute -top-20 -right-20 w-80 h-80 bg-emerald-500/20 rounded-full blur-[70px] pointer-events-none group-hover:bg-emerald-500/30 transition duration-700"></div>
+                                
+                                <div class="relative z-10 w-full flex-1 flex flex-col">
+                                    <div class="flex justify-center mb-6 shrink-0">
+                                        <div class="bg-slate-800/80 backdrop-blur p-1 rounded-xl flex relative w-full md:w-3/4 border border-slate-700 h-10 items-center">
+                                            <div id="financeToggleBg" class="absolute left-1 w-[calc(50%-4px)] h-[calc(100%-8px)] bg-emerald-500 rounded-lg transition-all duration-300 shadow-lg" style="left: 4px;"></div>
+                                            <button onclick="setFinancing(false)" class="flex-1 relative z-10 text-xs font-bold transition-colors duration-300 text-white" id="btnContadoText">Contado</button>
+                                            <button onclick="setFinancing(true)" class="flex-1 relative z-10 text-xs font-bold transition-colors duration-300 text-slate-400" id="btnFinanciadoText">Financiado</button>
+                                        </div>
+                                    </div>
+
+                                    <div class="text-center mb-6">
+                                        <p class="text-slate-400 text-[11px] uppercase font-bold tracking-wider mb-2" id="priceSubtitle">Inversión Inicial</p>
+                                        <div class="flex justify-center items-baseline gap-1">
+                                            <span class="hidden text-2xl font-bold text-slate-400 mr-1" id="pricePrefix">x</span>
+                                            <span class="text-5xl md:text-5xl lg:text-6xl font-tech font-bold tracking-tight" id="mainPriceDisplay">0</span>
+                                            <span class="text-2xl font-bold text-emerald-400">€</span>
+                                        </div>
+                                    </div>
+
+                                    <div id="priceBreakdown" class="mt-auto border-t border-slate-800 pt-5 space-y-3">
+                                            <div class="flex justify-between items-center text-emerald-400 text-sm">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-1 h-1 bg-emerald-500 rounded-full"></div>
+                                                    <span>Subvención UE</span>
+                                                </div>
+                                                <span class="font-bold font-tech">-2.400€</span>
+                                            </div>
+                                            <div class="flex justify-between items-center text-emerald-400 text-sm">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-1 h-1 bg-emerald-500 rounded-full"></div>
+                                                    <span>Deducción IRPF</span>
+                                                </div>
+                                                <span class="font-bold font-tech" id="irpfDeductionVal">-0€</span>
+                                            </div>
+                                            <div class="pt-4 mt-2 border-t border-slate-800 flex justify-between items-end">
+                                                <div class="text-xs text-slate-400 font-medium">Coste Real Final</div>
+                                                <div class="text-2xl font-bold text-white font-tech" id="netPriceVal">0€</div>
+                                            </div>
+                                    </div>
+                                    
+                                    <div id="financedMessage" class="hidden mt-auto border-t border-slate-800 pt-5 text-center">
+                                            <p class="text-emerald-400 text-sm font-bold">¡Empieza a ahorrar desde el día 1!</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="area-control bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col gap-3">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <h3 class="font-bold text-slate-800 text-sm">Ajustar Potencia</h3>
+                                    </div>
+                                    <span class="bg-slate-100 text-slate-600 font-bold px-3 py-1 rounded-lg text-xs" id="panelsControlDisplay">0 Paneles</span>
+                                </div>
+                                <div class="flex items-center gap-4 mt-1">
+                                    <span class="text-xs font-bold text-slate-400">Mín</span>
+                                    <input type="range" id="panelSlider" min="3" max="30" step="1" class="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-slate-900" oninput="updateSystemFromSlider(this.value)">
+                                    <span class="text-xs font-bold text-slate-400">Máx</span>
+                                </div>
+                            </div>
+
+                            <div class="area-savings bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between relative overflow-hidden">
+                                
+                                <div class="flex justify-between items-start z-10 relative">
+                                    <div>
+                                        <h3 class="font-bold text-slate-800 text-lg">Comparativa Mensual</h3>
+                                        <p class="text-xs text-slate-500 mt-1">Impacto estimado en tu bolsillo</p>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-3xl font-tech font-bold text-emerald-600" id="savingsPercent">0%</div>
+                                        <div class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Ahorro Directo</div>
+                                    </div>
+                                </div>
+
+                                <div class="flex justify-center items-end mt-4 mb-2 z-10 relative h-full">
+                                    <div class="bar-container w-full max-w-sm justify-around">
+                                        
+                                        <div class="flex flex-col items-center gap-1 group h-full justify-end w-20 relative">
+                                            <span class="font-bold text-slate-400 text-lg mb-1" id="oldBillText">0€</span>
+                                            <div class="bar bg-slate-200 w-full" style="height: 100%;"></div>
+                                            <div class="absolute -bottom-5 w-full text-center text-[10px] font-bold text-slate-400 uppercase tracking-wide">ANTES</div>
+                                        </div>
+
+                                        <div class="text-slate-300 pb-2">
+                                            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                        </div>
+
+                                        <div class="flex flex-col items-center gap-1 group h-full justify-end w-20 relative">
+                                            <span class="font-bold text-emerald-600 text-2xl mb-1" id="newBillText">0€</span>
+                                            
+                                            <div id="newBillBar" class="bar bg-emerald-500 shadow-lg shadow-emerald-200 w-full relative overflow-hidden" style="height: 0%">
+                                                <div class="absolute inset-0 bg-white/20 skew-y-12 translate-y-full group-hover:translate-y-0 transition-transform duration-500"></div>
+                                            </div>
+                                            
+                                            <div class="absolute -bottom-5 w-full text-center text-[10px] font-bold text-emerald-600 uppercase tracking-wide">AHORA</div>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="area-extras grid grid-cols-2 gap-3">
+                                <div onclick="toggleExtra('battery')" id="cardBattery" class="cursor-pointer bg-white p-4 rounded-3xl border-2 border-slate-200 transition-all active:scale-95 hover:shadow-md relative overflow-hidden group select-none flex flex-col justify-between h-28 md:h-auto">
+                                    <div class="flex justify-between items-start">
+                                        <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center transition-colors icon-bg">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                                        </div>
+                                        <div class="w-4 h-4 rounded-full border-2 border-slate-200 flex items-center justify-center check-circle">
+                                            <div class="w-2 h-2 bg-white rounded-full scale-0 transition-transform check-dot"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-bold text-slate-700">Batería</span>
+                                        <span class="text-[10px] font-medium text-slate-400 price-tag">+3k€</span>
+                                    </div>
+                                </div>
+
+                                <div onclick="toggleExtra('charger')" id="cardCharger" class="cursor-pointer bg-white p-4 rounded-3xl border-2 border-slate-200 transition-all active:scale-95 hover:shadow-md relative overflow-hidden group select-none flex flex-col justify-between h-28 md:h-auto">
+                                    <div class="flex justify-between items-start">
+                                        <div class="w-8 h-8 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center transition-colors icon-bg">
+                                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 13l-7 7-7-7m14-8l-7 7-7-7" /></svg>
+                                        </div>
+                                        <div class="w-4 h-4 rounded-full border-2 border-slate-200 flex items-center justify-center check-circle">
+                                            <div class="w-2 h-2 bg-white rounded-full scale-0 transition-transform check-dot"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <span class="block text-sm font-bold text-slate-700">Cargador</span>
+                                        <span class="text-[10px] font-medium text-slate-400 price-tag">+1.5k€</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="area-trees bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-center items-center text-center relative overflow-hidden group">
+                                <div class="absolute inset-0 bg-emerald-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                                <div class="relative z-10">
+                                    <div class="text-emerald-600 mb-1">
+                                        <svg class="w-6 h-6 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                    </div>
+                                    <span class="text-2xl font-bold text-slate-800 leading-none" id="treesValue">0</span>
+                                    <span class="text-[9px] text-slate-500 font-bold uppercase mt-1 block">Árboles</span>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="absolute bottom-0 left-0 w-full bg-white/90 backdrop-blur-xl border-t border-slate-200 p-4 z-30 flex justify-center shadow-[0_-5px_30px_rgba(0,0,0,0.05)]">
+                        <div class="flex gap-3 w-full max-w-6xl">
+                            <button onclick="downloadPDF()" class="w-14 h-14 flex-none flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 transition bg-white" title="Descargar PDF">
+                                <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            </button>
+                            <a href="#" id="whatsappBtn" target="_blank" class="flex-1 bg-slate-900 text-white font-bold rounded-xl flex items-center justify-center gap-3 hover:bg-[#25D366] shadow-lg shadow-slate-900/20 transition-all duration-300 active:scale-95 text-lg group">
+                                <svg class="w-6 h-6 text-emerald-400 group-hover:text-white transition-colors duration-300" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.008-.57-.008-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.16 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/>
+                                </svg>
+                                <span>Agendar Instalación</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <button onclick="goToStep(2)" class="absolute top-6 right-6 z-30 text-slate-400 hover:text-slate-800 transition p-2 bg-white/60 backdrop-blur rounded-full hover:bg-white border border-transparent hover:border-slate-200">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDYDPbAGNOWtbXrVgRUMj6JWT_TfK_jJeQ&libraries=drawing,places,geometry&callback=initMap" async defer></script>
+    <script src="js/app.js"></script>
+    
+   </body>
+   </html>

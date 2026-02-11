@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VETTA | Inversión Inteligente</title>
+    <meta name="description" content="Análisis financiero de la energía solar. Rentabilidad, amortización y revalorización de inmuebles.">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        tech: ['Space Grotesk', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            primary: '#10b981', 
+                            hover: '#059669',   
+                            dark: '#0f172a',    
+                            light: '#f8fafc',   
+                        }
+                    },
+                    boxShadow: {
+                        'soft': '0 10px 40px -10px rgba(0, 0, 0, 0.08)',
+                        'glow': '0 0 60px -15px rgba(16, 185, 129, 0.3)',
+                    },
+                    animation: {
+                        'aurora': 'aurora 10s infinite alternate',
+                    },
+                    keyframes: {
+                        aurora: {
+                            '0%': { transform: 'translate(0, 0) rotate(0deg)', opacity: '0.4' },
+                            '100%': { transform: 'translate(10%, 10%) rotate(5deg)', opacity: '0.6' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-white text-slate-600 font-sans text-lg antialiased selection:bg-brand-primary selection:text-white">
+
+    <nav class="fixed w-full z-50 bg-white/90 backdrop-blur-lg border-b border-slate-100 transition-all supports-[backdrop-filter]:bg-white/80">
+        <div class="max-w-[1400px] mx-auto px-6 lg:px-8">
+            <div class="flex justify-between items-center h-24">
+                
+                <div class="flex-shrink-0 flex items-center gap-3 cursor-pointer" onclick="window.location.href='index.html'">
+                    <div class="w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-white font-bold font-tech text-xl shadow-lg shadow-emerald-200/50">V</div>
+                    <span class="font-tech text-2xl font-bold text-slate-900 tracking-tight">VETTA</span>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    
+                    <a href="inversion.html" class="text-base font-bold text-emerald-600 bg-emerald-50 px-4 py-2 rounded-lg transition-all">
+                        Inversión vs Gasto
+                    </a>
+
+                    <a href="metodologia.html" class="text-base font-medium text-slate-500 hover:text-slate-900 hover:bg-slate-50 px-4 py-2 rounded-lg transition-all">
+                        Metodología
+                    </a>
+
+                    <div class="relative group h-24 flex items-center">
+                        <button class="flex items-center gap-1 text-base font-medium text-slate-500 group-hover:text-emerald-600 px-4 py-2 rounded-lg hover:bg-emerald-50/50 transition outline-none">
+                            Proyectos Locales
+                            <svg class="w-4 h-4 transition-transform group-hover:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                        </button>
+                        
+                        <div class="absolute top-20 left-1/2 -translate-x-1/2 w-64 bg-white rounded-2xl shadow-xl border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform group-hover:translate-y-0 translate-y-2 p-2">
+                            <div class="px-4 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider">Valencia Norte</div>
+                            <a href="solar/la-eliana.html" class="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-emerald-50 transition group/item">
+                                <span class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs font-bold group-hover/item:bg-emerald-600 group-hover/item:text-white transition">LE</span>
+                                <div>
+                                    <span class="block text-sm font-bold text-slate-900">La Eliana</span>
+                                    <span class="block text-[10px] text-slate-400">Bonificación IBI Activa</span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <a href="calculadora.html" class="bg-slate-900 hover:bg-slate-800 text-white px-6 py-3 rounded-xl font-medium text-base transition-all shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center gap-2">
+                        <span>Empezar Estudio</span>
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <section class="relative pt-40 pb-20 overflow-hidden bg-brand-light">
+        <div class="max-w-[1000px] mx-auto px-6 text-center relative z-10">
+            <span class="text-emerald-600 font-bold tracking-widest uppercase text-sm mb-6 block animate-pulse">Análisis de Rentabilidad</span>
+            <h1 class="text-5xl md:text-7xl font-tech font-bold text-slate-900 leading-tight mb-8">
+                La energía no es un gasto.<br> 
+                <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-teal-500">Es un activo financiero.</span>
+            </h1>
+            <p class="text-xl text-slate-500 leading-relaxed max-w-3xl mx-auto">
+                Si pagas 150€ de luz al mes, estás tirando 54.000€ en los próximos 25 años. 
+                Descubre por qué instalar paneles es matemáticamente superior a cualquier fondo de inversión garantizado.
+            </p>
+        </div>
+    </section>
+
+    <section class="py-24 bg-white relative">
+        <div class="max-w-[1400px] mx-auto px-6 lg:px-8">
+            
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                
+                <div class="bg-slate-50 border border-slate-200 rounded-[2.5rem] p-10 relative overflow-hidden">
+                    <div class="absolute top-6 right-8 text-4xl opacity-20">📉</div>
+                    <h3 class="text-2xl font-tech font-bold text-slate-900 mb-2">Vivir de "Alquiler" Energético</h3>
+                    <p class="text-slate-500 mb-8">Situación actual con tu compañía eléctrica.</p>
+
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between text-sm font-bold text-slate-700 mb-2">
+                                <span>Coste acumulado (10 años)</span>
+                                <span>- 22.000 €</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-3">
+                                <div class="bg-red-400 h-3 rounded-full" style="width: 40%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-bold text-slate-700 mb-2">
+                                <span>Coste acumulado (25 años)</span>
+                                <span>- 65.000 €</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-3">
+                                <div class="bg-red-500 h-3 rounded-full" style="width: 90%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-10 p-6 bg-red-50 rounded-2xl border border-red-100">
+                        <ul class="space-y-3 text-red-800 text-sm font-medium">
+                            <li class="flex items-center gap-3">✕ El dinero desaparece mes a mes.</li>
+                            <li class="flex items-center gap-3">✕ Sufres la inflación (IPC) cada año.</li>
+                            <li class="flex items-center gap-3">✕ Tu casa no aumenta de valor.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 rounded-[2.5rem] p-10 relative overflow-hidden transform lg:scale-105 shadow-2xl shadow-emerald-900/20">
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500 rounded-full blur-[120px] opacity-20 pointer-events-none"></div>
+                    
+                    <div class="absolute top-6 right-8 text-4xl">📈</div>
+                    <h3 class="text-2xl font-tech font-bold text-white mb-2">Ser Propietario (VETTA)</h3>
+                    <p class="text-emerald-400 mb-8">Generas tu propia energía. El activo es tuyo.</p>
+
+                    <div class="space-y-6">
+                        <div>
+                            <div class="flex justify-between text-sm font-bold text-slate-300 mb-2">
+                                <span>Coste Instalación</span>
+                                <span>6.000 € (Aprox)</span>
+                            </div>
+                            <div class="w-full bg-slate-700 rounded-full h-3">
+                                <div class="bg-emerald-500 h-3 rounded-full" style="width: 15%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm font-bold text-white mb-2">
+                                <span>Valor Generado (25 años)</span>
+                                <span>+ 45.000 €</span>
+                            </div>
+                            <div class="w-full bg-slate-700 rounded-full h-3">
+                                <div class="bg-emerald-400 h-3 rounded-full" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-10 p-6 bg-slate-800/50 rounded-2xl border border-slate-700 backdrop-blur-sm">
+                        <ul class="space-y-3 text-emerald-100 text-sm font-medium">
+                            <li class="flex items-center gap-3">✓ Amortizado en 4-6 años.</li>
+                            <li class="flex items-center gap-3">✓ Los siguientes 20 años la energía es GRATIS.</li>
+                            <li class="flex items-center gap-3">✓ Tu vivienda vale un 4% más al venderla.</li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="py-24 bg-brand-light">
+        <div class="max-w-[1400px] mx-auto px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-3xl font-tech font-bold text-slate-900">La rentabilidad en números</h2>
+                <p class="text-slate-500 mt-4">Datos comparados con productos financieros tradicionales.</p>
+            </div>
+
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white p-8 rounded-[2rem] shadow-soft border border-slate-100 text-center">
+                    <p class="text-slate-400 text-sm uppercase tracking-widest font-bold mb-4">Rentabilidad Anual</p>
+                    <div class="text-5xl font-tech font-bold text-slate-900 mb-2">15-20%</div>
+                    <p class="text-sm text-slate-500">TIR (Tasa Interna de Retorno) media de una instalación residencial en Valencia.</p>
+                </div>
+
+                <div class="bg-white p-8 rounded-[2rem] shadow-soft border border-slate-100 text-center relative overflow-hidden">
+                    <div class="absolute inset-0 bg-emerald-50 opacity-50"></div>
+                    <div class="relative z-10">
+                        <p class="text-emerald-600 text-sm uppercase tracking-widest font-bold mb-4">Plusvalía Inmobiliaria</p>
+                        <div class="text-5xl font-tech font-bold text-emerald-600 mb-2">+4.1%</div>
+                        <p class="text-sm text-slate-600">Incremento medio del valor de venta de una vivienda con Certificado Energético A.</p>
+                    </div>
+                </div>
+
+                <div class="bg-white p-8 rounded-[2rem] shadow-soft border border-slate-100 text-center">
+                    <p class="text-slate-400 text-sm uppercase tracking-widest font-bold mb-4">Impuestos (IBI)</p>
+                    <div class="text-5xl font-tech font-bold text-slate-900 mb-2">-50%</div>
+                    <p class="text-sm text-slate-500">Bonificación disponible en municipios como La Eliana o Paterna durante 3-5 años.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="py-32 bg-white text-center">
+        <div class="max-w-3xl mx-auto px-6">
+            <h2 class="text-4xl font-tech font-bold text-slate-900 mb-8">
+                ¿Quieres los números exactos de tu casa?
+            </h2>
+            <p class="text-xl text-slate-500 mb-12">
+                Nuestra calculadora cruza los datos de catastro con tu factura actual para darte un informe de rentabilidad personalizado.
+            </p>
+            <a href="calculadora.html" class="inline-flex items-center justify-center px-10 py-5 text-xl font-bold text-white bg-slate-900 rounded-2xl hover:bg-slate-800 transition shadow-xl transform hover:-translate-y-1">
+                Calcular mi Rentabilidad
+            </a>
+        </div>
+    </section>
+
+    <footer class="bg-slate-50 border-t border-slate-200 pt-16 pb-8">
+        <div class="max-w-[1400px] mx-auto px-6 lg:px-8">
+            <div class="text-center text-slate-400 text-sm">
+                &copy; 2024 VETTA Engineering Systems.
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>

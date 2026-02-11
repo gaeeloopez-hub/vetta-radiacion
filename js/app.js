@@ -202,33 +202,32 @@ function setRoofType(type) {
 // --- 3. NUEVA LÓGICA CIENTÍFICA (PVGIS API) ---
 // SUSTITUYE ESTA FUNCIÓN EN js/app.js
 async function getSolarDataPVGIS(lat, lng) {
-    console.log(`📡 Intentando conectar con satélite para: ${lat}, ${lng}`);
-    
-    // Este es el valor que verás si algo falla (el paracaídas)
-    const VALOR_POR_DEFECTO = 1500; 
+    // Si no hay coordenadas, avisamos
+    if (!lat || !lng || lat === 0) {
+        console.error("❌ Error: No hay coordenadas válidas para buscar.");
+        return 1500;
+    }
+
+    console.log(`🛰️ Pidiendo datos para Lat: ${lat}, Lng: ${lng}...`);
 
     try {
-        // La URL original del satélite
         const urlOriginal = `https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?lat=${lat}&lon=${lng}&peakpower=1&loss=14&angle=35&aspect=0&outputformat=json`;
         
-        // El "Puente Mágico": Pasamos la petición a través de un proxy que permite CORS
+        // Usamos un puente diferente por si el anterior falla
         const urlConPuente = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlOriginal)}`;
         
         const response = await fetch(urlConPuente);
-        
-        if (!response.ok) throw new Error("Error en el puente de datos");
-        
+        if (!response.ok) throw new Error("El satélite no responde");
+
         const data = await response.json();
-        
-        // Extraemos el dato real de producción anual
-        const productionPerkWp = data.outputs.totals.fixed.E_y;
-        
-        console.log(`🌞 ¡ÉXITO! Radiación real: ${productionPerkWp} kWh/kWp`);
-        return productionPerkWp;
-        
+        const production = data.outputs.totals.fixed.E_y;
+
+        console.log("✅ Datos recibidos correctamente:", production);
+        return production;
+
     } catch (error) {
-        console.warn("⚠️ No se pudo conectar con el satélite, usando 1500 por defecto.");
-        return VALOR_POR_DEFECTO; 
+        console.warn("⚠️ Fallo en el satélite. Usando valor 1500 por seguridad. Error:", error.message);
+        return 1500;
     }
 }
 

@@ -237,6 +237,31 @@ async function calculateAndShowResults() {
     
     // 2. OBTENER DATOS REALES (Esperamos la respuesta del satélite)
     const solarRadiation = await getSolarDataPVGIS(userData.lat, userData.lng);
+
+    // --- AÑADE ESTO AQUÍ (INICIO) ---
+    const badge = document.getElementById('solarBadge');
+    const valDisplay = document.getElementById('radiationValue');
+    const qualDisplay = document.getElementById('radiationQuality');
+
+    if(badge && valDisplay) {
+        badge.classList.remove('hidden'); // Hacemos visible la tarjeta
+        valDisplay.innerText = Math.round(solarRadiation); // Ponemos el número
+
+        // Le ponemos nota a la zona
+        if(solarRadiation > 1500) {
+            qualDisplay.innerText = "Excelente 🌟";
+            qualDisplay.className = "ml-2 px-2 py-0.5 rounded text-[10px] uppercase tracking-wide text-white bg-emerald-500";
+        } else if(solarRadiation > 1200) {
+            qualDisplay.innerText = "Muy Buena 👍";
+            qualDisplay.className = "ml-2 px-2 py-0.5 rounded text-[10px] uppercase tracking-wide text-white bg-blue-500";
+        } else {
+            qualDisplay.innerText = "Normal ☁️";
+            qualDisplay.className = "ml-2 px-2 py-0.5 rounded text-[10px] uppercase tracking-wide text-white bg-slate-500";
+        }
+    }
+    // --- (FIN) ---
+
+    // ... sigue tu código normal (let annualConsumption = ...)
     
     // 3. CÁLCULOS MATEMÁTICOS CON DATOS REALES
     let annualConsumption = (userData.bill / 0.20) * 12; // kWh consumidos al año

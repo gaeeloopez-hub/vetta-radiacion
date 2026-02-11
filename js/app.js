@@ -200,26 +200,35 @@ function setRoofType(type) {
 }
 
 // --- 3. NUEVA LÓGICA CIENTÍFICA (PVGIS API) ---
+// SUSTITUYE ESTA FUNCIÓN EN js/app.js
 async function getSolarDataPVGIS(lat, lng) {
-    console.log(`📡 Conectando con satélite para: ${lat}, ${lng}`);
+    console.log(`📡 Intentando conectar con satélite para: ${lat}, ${lng}`);
+    
+    // Este es el valor que verás si algo falla (el paracaídas)
+    const VALOR_POR_DEFECTO = 1500; 
+
     try {
-        // API Oficial de la Comisión Europea (PVGIS)
-        const url = `https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?lat=${lat}&lon=${lng}&peakpower=1&loss=14&angle=35&aspect=0&outputformat=json`;
+        // La URL original del satélite
+        const urlOriginal = `https://re.jrc.ec.europa.eu/api/v5_2/PVcalc?lat=${lat}&lon=${lng}&peakpower=1&loss=14&angle=35&aspect=0&outputformat=json`;
         
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("Error PVGIS");
+        // El "Puente Mágico": Pasamos la petición a través de un proxy que permite CORS
+        const urlConPuente = `https://api.allorigins.win/raw?url=${encodeURIComponent(urlOriginal)}`;
+        
+        const response = await fetch(urlConPuente);
+        
+        if (!response.ok) throw new Error("Error en el puente de datos");
         
         const data = await response.json();
         
-        // E_y es la producción anual estimada (kWh) para 1 kWp instalado
+        // Extraemos el dato real de producción anual
         const productionPerkWp = data.outputs.totals.fixed.E_y;
-        console.log(`🌞 Datos recibidos: ${productionPerkWp} kWh/kWp`);
         
+        console.log(`🌞 ¡ÉXITO! Radiación real: ${productionPerkWp} kWh/kWp`);
         return productionPerkWp;
         
     } catch (error) {
-        console.error("⚠️ Fallo conexión satélite, usando valor estimado:", error);
-        return 1500; // Valor seguro por defecto si falla Internet
+        console.warn("⚠️ No se pudo conectar con el satélite, usando 1500 por defecto.");
+        return VALOR_POR_DEFECTO; 
     }
 }
 

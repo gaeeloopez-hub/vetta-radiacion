@@ -243,15 +243,14 @@ async function getSolarDataPVGIS(lat, lng) {
 
 // --- 4. FUNCIÓN PRINCIPAL DE CÁLCULO (Modificada) ---
 async function calculateAndShowResults() {
-    // 1. Cambiamos el texto del botón al que te gusta
+    // 1. Corregimos el texto del botón
     const btn = document.querySelector("button[onclick='calculateAndShowResults()']");
     if(btn) btn.innerHTML = `<span class="animate-pulse">🛰️ Consultando Satélite...</span>`;
 
     try {
-        // 2. Obtención de radiación real
         const solarRadiation = await getSolarDataPVGIS(userData.lat, userData.lng);
         
-        // 3. Actualizar la insignia visual
+        // 2. Actualizar insignia
         const valText = document.getElementById('radValue');
         const qualText = document.getElementById('radQual');
         if (valText && qualText) {
@@ -260,47 +259,34 @@ async function calculateAndShowResults() {
             qualText.style.color = solarRadiation >= 1600 ? "#059669" : (solarRadiation >= 1300 ? "#2563eb" : "#64748b");
         }
 
-        // --- 4. ARREGLO DE PANELES (Para que no salga 0) ---
-        // Calculamos cuánta energía necesita el cliente al año
+        // 3. Lógica de Paneles (Cálculo real)
         const annualEnergyNeeded = (userData.bill / 0.20) * 12; 
-        
-        // Calculamos cuántos paneles necesita para cubrir ese gasto
-        // Suponemos paneles de 450W (0.45kWp)
         let panelsByNeed = Math.ceil((annualEnergyNeeded / solarRadiation) / 0.45);
+        let maxPanelsByArea = userData.area > 0 ? Math.floor(userData.area / 2) : 30;
         
-        // Calculamos cuántos caben en el tejado
-        // Cada panel ocupa unos 2 m2 aprox.
-        let maxPanelsByArea = userData.area > 0 ? Math.floor(userData.area / 2) : 0;
-        
-        // DECISIÓN FINAL: 
-        // Si hay área dibujada, respetamos el límite del tejado.
-        // Si no hay área (es 0), ponemos los que necesita por factura.
-        if (maxPanelsByArea > 0) {
-            userData.panels = Math.min(panelsByNeed, maxPanelsByArea);
-        } else {
-            userData.panels = panelsByNeed;
-        }
-
-        // Aseguramos un mínimo de 1 panel si hay factura
+        userData.panels = Math.min(panelsByNeed, maxPanelsByArea);
         if (userData.panels <= 0) userData.panels = 1;
 
-        // --- 5. ACTUALIZAR EL HTML DEL SIMULADOR ---
-        // Buscamos el ID donde debe aparecer el número. 
-        // ¡IMPORTANTE! Revisa que en tu calculadora.html el ID sea "panelsValue"
-        const panelsDisplay = document.getElementById('panelsValue'); 
+        // --- EL ARREGLO DEL SLIDER ---
+        // Buscamos el input del slider y el número que lo acompaña
+        const slider = document.querySelector('input[type="range"]'); // Busca el deslizador
+        const panelsDisplay = document.getElementById('panelsValue'); // El número en grande
+        
+        if (slider) {
+            slider.value = userData.panels; // Movemos el circulito del slider
+        }
         if (panelsDisplay) {
-            panelsDisplay.innerText = userData.panels;
+            panelsDisplay.innerText = userData.panels; // Cambiamos el "0" por el número real
         }
 
-        // 6. Recalcular precios financieros y pasar al paso 3
+        // 4. Actualizar cálculos financieros y viajar al paso 3
         recalculateFinancials();
         goToStep(3);
 
     } catch (error) {
-        console.error("Error en el cálculo:", error);
+        console.error("Error:", error);
         goToStep(3);
     } finally {
-        // Restauramos el botón original
         if(btn) btn.innerHTML = `<span>Generar Estudio Completo</span>`;
     }
 }

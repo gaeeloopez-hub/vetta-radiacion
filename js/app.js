@@ -243,41 +243,53 @@ async function getSolarDataPVGIS(lat, lng) {
 
 // --- 4. FUNCIÓN PRINCIPAL DE CÁLCULO (Modificada) ---
 async function calculateAndShowResults() {
-    // 1. Feedback visual en el botón para que el usuario sepa que está trabajando
     const btn = document.querySelector("button[onclick='calculateAndShowResults()']");
-    if(btn) btn.innerHTML = `<span class="animate-pulse">🛰️ Consultando Satélite...</span>`;
+    if(btn) btn.innerHTML = `<span class="animate-pulse">🛰️ Calculando...</span>`;
 
     try {
-        // 2. Obtener la radiación real (Asegúrate de haber buscado una dirección en el mapa antes)
+        // 1. Obtenemos la radiación (lo que ya funcionaba)
         const solarRadiation = await getSolarDataPVGIS(userData.lat, userData.lng);
         
-        // 3. CONEXIÓN CON LA INSIGNIA (Aquí es donde arreglamos el "0")
+        // 2. Actualizamos la insignia visual
         const valText = document.getElementById('radValue');
         const qualText = document.getElementById('radQual');
-        
         if (valText && qualText) {
-            valText.innerText = Math.floor(solarRadiation); // Cambiamos el 0 por el dato real
-            
-            // Le ponemos la nota de calidad
-            if(solarRadiation >= 1600) {
-                qualText.innerText = "EXCELENTE";
-                qualText.style.color = "#059669"; 
-            } else if(solarRadiation >= 1300) {
-                qualText.innerText = "MUY BUENA";
-                qualText.style.color = "#2563eb";
-            } else {
-                qualText.innerText = "ESTÁNDAR";
-                qualText.style.color = "#64748b";
-            }
+            valText.innerText = Math.floor(solarRadiation);
+            // Lógica de colores (estándar, buena, excelente...)
+            qualText.innerText = solarRadiation >= 1600 ? "EXCELENTE" : (solarRadiation >= 1300 ? "MUY BUENA" : "ESTÁNDAR");
+            qualText.style.color = solarRadiation >= 1600 ? "#059669" : (solarRadiation >= 1300 ? "#2563eb" : "#64748b");
         }
 
-        // 4. Continuar con el resto de cálculos
+        // --- 3. LÓGICA DE PANELES (EL ARREGLO PARA QUE NO SALGA 0) ---
+        // Calculamos consumo anual basado en la factura
+        const annualEnergyNeeded = (userData.bill / 0.20) * 12; 
+        
+        // Calculamos cuánta potencia (kWp) necesita el cliente
+        let recommendedkWp = annualEnergyNeeded / solarRadiation;
+        
+        // Calculamos cuántos paneles son (suponiendo 450W por panel)
+        let panelsByNeed = Math.ceil(recommendedkWp / 0.45);
+        
+        // Miramos cuántos caben en el área que dibujaste
+        let maxPanelsByArea = Math.floor(userData.area / 2);
+        
+        // Elegimos el número final: el que necesita, pero sin pasarse del tejado
+        userData.panels = Math.min(panelsByNeed, maxPanelsByArea);
+        if (userData.panels <= 0 && maxPanelsByArea > 0) userData.panels = 1;
+
+        // --- 4. ACTUALIZAR EL SIMULADOR EN EL HTML ---
+        // Buscamos el ID donde pone "0 paneles" y le metemos el dato real
+        const panelsDisplay = document.getElementById('panelsValue'); 
+        if (panelsDisplay) {
+            panelsDisplay.innerText = userData.panels;
+        }
+
+        // 5. Recalcular precios y pasar a la pantalla final
         recalculateFinancials();
-        goToStep(3); // Saltar a la pantalla de resultados
+        goToStep(3);
 
     } catch (error) {
-        console.error("Error en el cálculo:", error);
-        // Si falla el satélite, forzamos el paso al paso 3 para que no se quede colgado
+        console.error("Fallo en el cálculo final:", error);
         goToStep(3);
     } finally {
         if(btn) btn.innerHTML = `<span>Generar Estudio Completo</span>`;

@@ -260,31 +260,32 @@ async function calculateAndShowResults() {
             qualText.style.color = solarRadiation >= 1600 ? "#059669" : (solarRadiation >= 1300 ? "#2563eb" : "#64748b");
         }
 
-        // --- 4. CÁLCULO DE PANELES (Lógica priorizando el tejado) ---
+        // --- 4. CÁLCULO DE PANELES (SINCRONIZADO CON EL TEJADO) ---
+        // A. Cálculo de lo que cabe (Capacidad)
+        // Usamos 2.2 igual que en el Paso 1 para que coincida el número exacto
+        let maxPanelsByArea = userData.area > 0 ? Math.floor(userData.area / 2.2) : 0;
+
+        // B. Cálculo de lo que necesita (Consumo)
         const annualEnergyNeeded = (userData.bill / 0.20) * 12; 
-        
-        // A. Paneles según consumo (Necesidad)
         let panelsByNeed = Math.ceil((annualEnergyNeeded / solarRadiation) / 0.45);
-        
-        // B. Paneles según espacio (Límite físico)
-        // Usamos 2m² por panel para ser conservadores
-        let maxPanelsByArea = userData.area > 0 ? Math.floor(userData.area / 2) : 0;
         
         // C. DECISIÓN FINAL:
         if (maxPanelsByArea > 0) {
-            // Si dibujó tejado: Le damos lo que necesita, pero si no cabe, le damos el máximo que quepa.
-            userData.panels = Math.min(panelsByNeed, maxPanelsByArea);
+            // OPCIÓN AMBICIOSA: Si ha dibujado tejado, le ponemos TODO lo que cabe.
+            // Así coincide con el mensaje "Te caben X paneles".
+            userData.panels = maxPanelsByArea;
         } else {
-            // Si NO dibujó tejado (saltó el paso): Le damos lo que necesita por factura.
+            // Si no ha dibujado, le ponemos lo que necesita por factura.
             userData.panels = panelsByNeed;
         }
 
-        // Seguridad: El slider va de 3 a 30, no podemos salirnos de ahí
+        // Seguridad del Slider (Mínimo 3, Máximo 30 o lo que quepa si es más)
+        // Si caben 40, el slider debería crecer, si no, lo limitamos a 30.
         if (userData.panels < 3) userData.panels = 3;
-        if (userData.panels > 30) userData.panels = 30;
-
-        // --- 5. ACTUALIZACIÓN CRÍTICA DE POTENCIA (Aquí se arregla el precio de 1500€) ---
-        // Antes esto no se actualizaba a tiempo, por eso el precio salía base.
+        
+        // --- 5. ACTUALIZACIÓN CRÍTICA DE POTENCIA ---
+        // Esto arregla que el precio salga en 1500€. Calculamos el kWp ANTES de los precios.
+        userData.panels = parseInt(userData.panels); // Aseguramos que sea número entero
         userData.kWp = userData.panels * 0.450;
 
         // --- 6. SINCRONIZAR EL SLIDER Y EL TEXTO ---
@@ -292,10 +293,14 @@ async function calculateAndShowResults() {
         const sliderText = document.getElementById('panelsControlDisplay');
         
         if (slider) {
-            slider.value = userData.panels; // Coloca la bolita en su sitio
+            // Si caben más de 30 paneles, ampliamos el límite del slider
+            if (userData.panels > 30) slider.max = userData.panels;
+            else slider.max = 30; // Volvemos al estándar si es pequeño
+            
+            slider.value = userData.panels; // Coloca la bolita en el número exacto
         }
         if (sliderText) {
-            sliderText.innerText = userData.panels + " Paneles"; // Pone el texto correcto
+            sliderText.innerText = userData.panels + " Paneles"; 
         }
 
         // 7. Recalcular precios (Ahora usará el kWp correcto) y mostrar pantalla

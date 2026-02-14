@@ -243,55 +243,64 @@ async function getSolarDataPVGIS(lat, lng) {
 
 // --- 4. FUNCIÓN PRINCIPAL DE CÁLCULO (Modificada) ---
 async function calculateAndShowResults() {
+    // 1. Cambiamos el texto del botón al que te gusta
     const btn = document.querySelector("button[onclick='calculateAndShowResults()']");
-    if(btn) btn.innerHTML = `<span class="animate-pulse">🛰️ Calculando...</span>`;
+    if(btn) btn.innerHTML = `<span class="animate-pulse">🛰️ Consultando Satélite...</span>`;
 
     try {
-        // 1. Obtenemos la radiación (lo que ya funcionaba)
+        // 2. Obtención de radiación real
         const solarRadiation = await getSolarDataPVGIS(userData.lat, userData.lng);
         
-        // 2. Actualizamos la insignia visual
+        // 3. Actualizar la insignia visual
         const valText = document.getElementById('radValue');
         const qualText = document.getElementById('radQual');
         if (valText && qualText) {
             valText.innerText = Math.floor(solarRadiation);
-            // Lógica de colores (estándar, buena, excelente...)
             qualText.innerText = solarRadiation >= 1600 ? "EXCELENTE" : (solarRadiation >= 1300 ? "MUY BUENA" : "ESTÁNDAR");
             qualText.style.color = solarRadiation >= 1600 ? "#059669" : (solarRadiation >= 1300 ? "#2563eb" : "#64748b");
         }
 
-        // --- 3. LÓGICA DE PANELES (EL ARREGLO PARA QUE NO SALGA 0) ---
-        // Calculamos consumo anual basado en la factura
+        // --- 4. ARREGLO DE PANELES (Para que no salga 0) ---
+        // Calculamos cuánta energía necesita el cliente al año
         const annualEnergyNeeded = (userData.bill / 0.20) * 12; 
         
-        // Calculamos cuánta potencia (kWp) necesita el cliente
-        let recommendedkWp = annualEnergyNeeded / solarRadiation;
+        // Calculamos cuántos paneles necesita para cubrir ese gasto
+        // Suponemos paneles de 450W (0.45kWp)
+        let panelsByNeed = Math.ceil((annualEnergyNeeded / solarRadiation) / 0.45);
         
-        // Calculamos cuántos paneles son (suponiendo 450W por panel)
-        let panelsByNeed = Math.ceil(recommendedkWp / 0.45);
+        // Calculamos cuántos caben en el tejado
+        // Cada panel ocupa unos 2 m2 aprox.
+        let maxPanelsByArea = userData.area > 0 ? Math.floor(userData.area / 2) : 0;
         
-        // Miramos cuántos caben en el área que dibujaste
-        let maxPanelsByArea = Math.floor(userData.area / 2);
-        
-        // Elegimos el número final: el que necesita, pero sin pasarse del tejado
-        userData.panels = Math.min(panelsByNeed, maxPanelsByArea);
-        if (userData.panels <= 0 && maxPanelsByArea > 0) userData.panels = 1;
+        // DECISIÓN FINAL: 
+        // Si hay área dibujada, respetamos el límite del tejado.
+        // Si no hay área (es 0), ponemos los que necesita por factura.
+        if (maxPanelsByArea > 0) {
+            userData.panels = Math.min(panelsByNeed, maxPanelsByArea);
+        } else {
+            userData.panels = panelsByNeed;
+        }
 
-        // --- 4. ACTUALIZAR EL SIMULADOR EN EL HTML ---
-        // Buscamos el ID donde pone "0 paneles" y le metemos el dato real
+        // Aseguramos un mínimo de 1 panel si hay factura
+        if (userData.panels <= 0) userData.panels = 1;
+
+        // --- 5. ACTUALIZAR EL HTML DEL SIMULADOR ---
+        // Buscamos el ID donde debe aparecer el número. 
+        // ¡IMPORTANTE! Revisa que en tu calculadora.html el ID sea "panelsValue"
         const panelsDisplay = document.getElementById('panelsValue'); 
         if (panelsDisplay) {
             panelsDisplay.innerText = userData.panels;
         }
 
-        // 5. Recalcular precios y pasar a la pantalla final
+        // 6. Recalcular precios financieros y pasar al paso 3
         recalculateFinancials();
         goToStep(3);
 
     } catch (error) {
-        console.error("Fallo en el cálculo final:", error);
+        console.error("Error en el cálculo:", error);
         goToStep(3);
     } finally {
+        // Restauramos el botón original
         if(btn) btn.innerHTML = `<span>Generar Estudio Completo</span>`;
     }
 }

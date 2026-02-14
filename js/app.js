@@ -251,7 +251,7 @@ async function calculateAndShowResults() {
         // 2. Obtener radiación real
         const solarRadiation = await getSolarDataPVGIS(userData.lat, userData.lng);
         
-        // 3. Actualizar la insignia (sol y texto)
+        // 3. Actualizar la insignia visual
         const valText = document.getElementById('radValue');
         const qualText = document.getElementById('radQual');
         if (valText && qualText) {
@@ -260,36 +260,45 @@ async function calculateAndShowResults() {
             qualText.style.color = solarRadiation >= 1600 ? "#059669" : (solarRadiation >= 1300 ? "#2563eb" : "#64748b");
         }
 
-        // --- 4. CÁLCULO DE PANELES ---
-        // Energía necesaria anual basada en factura
+        // --- 4. CÁLCULO DE PANELES (Lógica priorizando el tejado) ---
         const annualEnergyNeeded = (userData.bill / 0.20) * 12; 
         
-        // Paneles necesarios por consumo
+        // A. Paneles según consumo (Necesidad)
         let panelsByNeed = Math.ceil((annualEnergyNeeded / solarRadiation) / 0.45);
         
-        // Paneles máximos por espacio (si dibujó tejado)
-        let maxPanelsByArea = userData.area > 0 ? Math.floor(userData.area / 2) : 30;
+        // B. Paneles según espacio (Límite físico)
+        // Usamos 2m² por panel para ser conservadores
+        let maxPanelsByArea = userData.area > 0 ? Math.floor(userData.area / 2) : 0;
         
-        // Elegimos el mínimo entre lo que necesita y lo que cabe
-        userData.panels = Math.min(panelsByNeed, maxPanelsByArea);
-        
-        // Seguridad: Mínimo 3 paneles (que es el mínimo del slider) y máximo 30
+        // C. DECISIÓN FINAL:
+        if (maxPanelsByArea > 0) {
+            // Si dibujó tejado: Le damos lo que necesita, pero si no cabe, le damos el máximo que quepa.
+            userData.panels = Math.min(panelsByNeed, maxPanelsByArea);
+        } else {
+            // Si NO dibujó tejado (saltó el paso): Le damos lo que necesita por factura.
+            userData.panels = panelsByNeed;
+        }
+
+        // Seguridad: El slider va de 3 a 30, no podemos salirnos de ahí
         if (userData.panels < 3) userData.panels = 3;
         if (userData.panels > 30) userData.panels = 30;
 
-        // --- 5. SINCRONIZACIÓN DEL SLIDER (EL ARREGLO) ---
-        // Aquí es donde fallaba antes por los nombres de los IDs
-        const slider = document.getElementById('panelSlider');           // El input de la bolita
-        const sliderText = document.getElementById('panelsControlDisplay'); // El texto "X Paneles"
+        // --- 5. ACTUALIZACIÓN CRÍTICA DE POTENCIA (Aquí se arregla el precio de 1500€) ---
+        // Antes esto no se actualizaba a tiempo, por eso el precio salía base.
+        userData.kWp = userData.panels * 0.450;
+
+        // --- 6. SINCRONIZAR EL SLIDER Y EL TEXTO ---
+        const slider = document.getElementById('panelSlider');
+        const sliderText = document.getElementById('panelsControlDisplay');
         
         if (slider) {
-            slider.value = userData.panels; // Movemos la bolita al sitio correcto
+            slider.value = userData.panels; // Coloca la bolita en su sitio
         }
         if (sliderText) {
-            sliderText.innerText = userData.panels + " Paneles"; // Cambiamos el texto
+            sliderText.innerText = userData.panels + " Paneles"; // Pone el texto correcto
         }
 
-        // 6. Recalcular precios y avanzar
+        // 7. Recalcular precios (Ahora usará el kWp correcto) y mostrar pantalla
         recalculateFinancials();
         goToStep(3);
 

@@ -387,6 +387,7 @@ function setFinancing(isFinanced) {
 }
 
 function recalculateFinancials() {
+    // 1. Costes Base (Paneles + Batería + Cargador)
     let baseCost = (userData.kWp * 1100) + 1500; 
     if(userData.extras.battery) baseCost += 3000;
     if(userData.extras.charger) baseCost += 1500;
@@ -394,22 +395,35 @@ function recalculateFinancials() {
     userData.grossPrice = baseCost;
     userData.finalPrice = userData.grossPrice;
 
-    const euSubsidy = 2400; 
-    let irpfDeductionPotential = userData.grossPrice * 0.40;
-    let finalIrpfDeduction = 0;
+    // 2. CÁLCULO DE AYUDAS (La parte del IRPF)
+    const euSubsidy = 2400; // Subvención fija
+    
+    // Calculamos el 40% de la obra (el máximo legal deducible)
+    let maxDeduction = userData.grossPrice * 0.40;
+    
+    // LÓGICA INTELIGENTE:
+    // Si el usuario ha puesto salario, usamos el mínimo entre su salario y el 40%.
+    // Si NO ha puesto nada (es 0 o vacío), asumimos el caso óptimo (el 40%) para motivar la venta.
+    let finalIrpfDeduction = maxDeduction; 
+    
     if (userData.salary > 0) {
-        finalIrpfDeduction = Math.min(irpfDeductionPotential, userData.salary);
+        finalIrpfDeduction = Math.min(maxDeduction, userData.salary);
     }
+
+    // Calculamos precio neto final (Precio Bruto - Ayudas)
     userData.netPrice = userData.grossPrice - euSubsidy - finalIrpfDeduction;
 
+    // 3. Escribimos los textos en la pantalla
+    // Aseguramos que nunca salga "-0€" usando Math.floor
     document.getElementById('irpfDeductionVal').innerText = "-" + Math.floor(finalIrpfDeduction).toLocaleString() + "€";
     document.getElementById('netPriceVal').innerText = Math.floor(userData.netPrice).toLocaleString() + "€";
 
+    // 4. Financiación (Cuota mensual)
     const r = 0.065 / 12; 
     const n = 120;
     userData.monthlyInstallment = (userData.finalPrice * r * Math.pow(1+r, n)) / (Math.pow(1+r, n) - 1);
     
-    // CÁLCULO DE AHORRO
+    // 5. Ahorro energético (Factura de luz)
     let savingsPercent = 0.55; 
     if(userData.extras.battery) savingsPercent = 0.90;
     
@@ -420,29 +434,29 @@ function recalculateFinancials() {
     const monthlyBill = userData.bill;
     const newMonthlyBill = monthlyBill * (1 - savingsPercent);
     const monthlySavings = monthlyBill - newMonthlyBill;
+    
+    // Árboles (Un detalle visual)
     const trees = Math.floor(monthlySavings / 4); 
 
+    // 6. Actualizar resto de la interfaz
     document.getElementById('oldBillText').innerText = monthlyBill + "€";
     document.getElementById('newBillText').innerText = Math.floor(newMonthlyBill) + "€";
     document.getElementById('savingsPercent').innerText = "-" + Math.floor(savingsPercent * 100) + "%";
     
     const remainingPercent = (1 - savingsPercent) * 100;
-    const visualHeight = Math.max(remainingPercent, 2);
-    
     setTimeout(() => {
         const bar = document.getElementById('newBillBar');
-        if(bar) bar.style.height = visualHeight + "%";
+        if(bar) bar.style.height = Math.max(remainingPercent, 2) + "%";
     }, 100);
 
     document.getElementById('headerPower').innerText = userData.kWp.toFixed(2) + " kWp";
     
     const treesEl = document.getElementById('treesValue');
-    animateValue(treesEl, parseInt(treesEl.innerText), trees, 1000);
+    if(treesEl) animateValue(treesEl, parseInt(treesEl.innerText) || 0, trees, 1000);
 
     updatePriceDisplay();
     updateWhatsApp();
 }
-
 function animateValue(obj, start, end, duration, isCurrency = false) {
     if(start === end) return;
     let startTimestamp = null;

@@ -243,14 +243,15 @@ async function getSolarDataPVGIS(lat, lng) {
 
 // --- 4. FUNCIÓN PRINCIPAL DE CÁLCULO (Modificada) ---
 async function calculateAndShowResults() {
-    // 1. Corregimos el texto del botón
+    // 1. Feedback visual
     const btn = document.querySelector("button[onclick='calculateAndShowResults()']");
     if(btn) btn.innerHTML = `<span class="animate-pulse">🛰️ Consultando Satélite...</span>`;
 
     try {
+        // 2. Obtener radiación real
         const solarRadiation = await getSolarDataPVGIS(userData.lat, userData.lng);
         
-        // 2. Actualizar insignia
+        // 3. Actualizar la insignia (sol y texto)
         const valText = document.getElementById('radValue');
         const qualText = document.getElementById('radQual');
         if (valText && qualText) {
@@ -259,32 +260,41 @@ async function calculateAndShowResults() {
             qualText.style.color = solarRadiation >= 1600 ? "#059669" : (solarRadiation >= 1300 ? "#2563eb" : "#64748b");
         }
 
-        // 3. Lógica de Paneles (Cálculo real)
+        // --- 4. CÁLCULO DE PANELES ---
+        // Energía necesaria anual basada en factura
         const annualEnergyNeeded = (userData.bill / 0.20) * 12; 
+        
+        // Paneles necesarios por consumo
         let panelsByNeed = Math.ceil((annualEnergyNeeded / solarRadiation) / 0.45);
+        
+        // Paneles máximos por espacio (si dibujó tejado)
         let maxPanelsByArea = userData.area > 0 ? Math.floor(userData.area / 2) : 30;
         
+        // Elegimos el mínimo entre lo que necesita y lo que cabe
         userData.panels = Math.min(panelsByNeed, maxPanelsByArea);
-        if (userData.panels <= 0) userData.panels = 1;
+        
+        // Seguridad: Mínimo 3 paneles (que es el mínimo del slider) y máximo 30
+        if (userData.panels < 3) userData.panels = 3;
+        if (userData.panels > 30) userData.panels = 30;
 
-        // --- EL ARREGLO DEL SLIDER ---
-        // Buscamos el input del slider y el número que lo acompaña
-        const slider = document.querySelector('input[type="range"]'); // Busca el deslizador
-        const panelsDisplay = document.getElementById('panelsValue'); // El número en grande
+        // --- 5. SINCRONIZACIÓN DEL SLIDER (EL ARREGLO) ---
+        // Aquí es donde fallaba antes por los nombres de los IDs
+        const slider = document.getElementById('panelSlider');           // El input de la bolita
+        const sliderText = document.getElementById('panelsControlDisplay'); // El texto "X Paneles"
         
         if (slider) {
-            slider.value = userData.panels; // Movemos el circulito del slider
+            slider.value = userData.panels; // Movemos la bolita al sitio correcto
         }
-        if (panelsDisplay) {
-            panelsDisplay.innerText = userData.panels; // Cambiamos el "0" por el número real
+        if (sliderText) {
+            sliderText.innerText = userData.panels + " Paneles"; // Cambiamos el texto
         }
 
-        // 4. Actualizar cálculos financieros y viajar al paso 3
+        // 6. Recalcular precios y avanzar
         recalculateFinancials();
         goToStep(3);
 
     } catch (error) {
-        console.error("Error:", error);
+        console.error("Error crítico:", error);
         goToStep(3);
     } finally {
         if(btn) btn.innerHTML = `<span>Generar Estudio Completo</span>`;
